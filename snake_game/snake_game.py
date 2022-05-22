@@ -20,7 +20,7 @@ pygame.mixer.pre_init(44100, -16, 2, 2048)
 
 # Creating Window
 gameWindow = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Snake Mania")
+pygame.display.set_caption("Snake")
 pygame.display.update()  # to apply the changes in the display
 
 # backgournd image
