@@ -136,7 +136,7 @@ def welcome():
 
 
 def gameloop():
-    pygame.mixer.music.load("play.mp3", repeat = -1)
+    pygame.mixer.music.load("play.mp3")
     pygame.mixer.music.play()
     if(not os.path.exists("high_score.txt")):
         with open("high_score.txt", "w") as f:
