@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,11 +8,25 @@
     <title>Document</title>
 </head>
 <style>
+
     body{
-        background-color: rgb(49, 46, 46);
+        width: 100vw;
+        height: 100vh;
+        background-color: black;
+        display: grid;
+        place-content: center;
     }
 </style>
-<body>
-    <h1>Hello</h1>
+
+<body>    
+    <a href="https://time.is/Patna" id="time_is_link" rel="nofollow"
+        style="font-size:50px;color:white;background:black">Time in Patna:</a>
+    <span id="Patna_z424" style="font-size:50px;color:white;background:black"></span>
+    <script src="//widget.time.is/en.js"></script>
+    <script>
+        time_is_widget.init({ Patna_z424: { template: "TIME<br>DATE", time_format: "12hours:minutesAMPM", date_format: "dayname daynum/monthnum/yy" } });
+    </script>
+
 </body>
+
 </html>

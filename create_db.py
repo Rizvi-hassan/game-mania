@@ -17,6 +17,9 @@ mycursor.execute("CREATE TABLE user (id INT AUTO_INCREMENT PRIMARY KEY, username
 # adding the column of snake-score
 mycursor.execute("ALTER TABLE `user` ADD `snake-score` INT NULL DEFAULT '0' ")
 
+# adding the column of pong 
+mycursor.execute("ALTER TABLE `user` ADD `pong-history` FLOAT NOT NULL DEFAULT '0' AFTER `snake-score`")
+
 mycursor.execute("SHOW TABLES")
 
 for x in mycursor:
