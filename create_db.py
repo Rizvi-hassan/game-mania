@@ -20,6 +20,9 @@ mycursor.execute("ALTER TABLE `user` ADD `snake-score` INT NULL DEFAULT '0' ")
 # adding the column of pong 
 mycursor.execute("ALTER TABLE `user` ADD `pong-history` FLOAT NOT NULL DEFAULT '0' AFTER `snake-score`")
 
+#adding the column of flappy
+mycursor.execute("ALTER TABLE `user` ADD `flappy-score` INT NOT NULL DEFAULT '0' AFTER `pong-history`")
+
 mycursor.execute("SHOW TABLES")
 
 for x in mycursor:

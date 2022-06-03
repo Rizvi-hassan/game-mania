@@ -1,3 +1,8 @@
+#pygame import
+import pygame
+from pygame.locals import *  
+
+
 #TODO: TKINTER INIIALIZATION
 from tkinter import *
 from tkinter import ttk
@@ -34,19 +39,19 @@ font3 = tkFont.Font(family = "Rockwell Extra Bold", size = 20, weight = "bold", 
 current_user = ""
 
 #TODO: Image variables
-bg1 = Image.open("bg1.jpg")
+bg1 = Image.open("images/bg1.jpg")
 bg1 = bg1.resize((win_width, win_height))
 bg1 = ImageTk.PhotoImage(bg1)
 
-bg2 = Image.open("snake_fg.jpg")
+bg2 = Image.open("images/snake_fg.jpg")
 bg2 = bg2.resize((win_width, win_height))
 bg2 = ImageTk.PhotoImage(bg2)
 
-bg3 = Image.open("flappy_fg.jpg")
+bg3 = Image.open("images/flappy_fg.jpg")
 bg3 = bg3.resize((win_width-40, win_height-50))
 bg3 = ImageTk.PhotoImage(bg3)
 
-bg4 = Image.open("pong_fg.jpg")
+bg4 = Image.open("images/pong_fg.jpg")
 bg4 = bg4.resize((win_width-40, win_height-50))
 bg4 = ImageTk.PhotoImage(bg4)
 
@@ -63,7 +68,6 @@ root.maxsize(win_width, win_height)
 
 #snake game 
 def Snake_run(who):
-    import pygame
     import random
     pygame.init()
 
@@ -79,6 +83,9 @@ def Snake_run(who):
     font = pygame.font.SysFont(None, 25)
     clock = pygame.time.Clock()  # to set the framerate of the game
     exit_game = False
+    hit = pygame.mixer.Sound('sounds/hit.wav')
+    point = pygame.mixer.Sound('sounds/point.wav')
+    turn = pygame.mixer.Sound('sounds/wing.wav')
 
     # Creating Window
     gameWindow = pygame.display.set_mode((screen_width, screen_height))
@@ -86,14 +93,14 @@ def Snake_run(who):
     pygame.display.update()  # to apply the changes in the display
 
     # backgournd image
-    bgimg = pygame.image.load("snake_game.jpg")
+    bgimg = pygame.image.load("images/snake_game.jpg")
     bgimg = pygame.transform.scale(
         bgimg, (screen_width, screen_height)).convert_alpha()
 
-    apple = pygame.image.load("apple.png")
+    apple = pygame.image.load("images/apple.png")
     apple = pygame.transform.scale(apple, (20, 20)).convert_alpha()
 
-    mouth = pygame.image.load("mouth.png")
+    mouth = pygame.image.load("images/mouth.png")
     mouth = pygame.transform.scale(mouth, (20, 20)).convert_alpha()
 
 
@@ -123,16 +130,18 @@ def Snake_run(who):
 
     def welcome(exit_game):
         while not exit_game:
-            gameWindow.fill((217, 176, 227))
-            gameWindow.blit(bgimg, (0, 0))
-            text_screen("Press Space bar to play", black, 240, screen_height-50)
-            pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     exit_game = True
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         exit_game = gameloop(exit_game)
+                        if exit_game:
+                            break
+            gameWindow.fill((217, 176, 227))
+            gameWindow.blit(bgimg, (0, 0))
+            text_screen("Press Space bar to play", black, 240, screen_height-50)
+            pygame.display.update()
             clock.tick(60)
 
 
@@ -141,7 +150,7 @@ def Snake_run(who):
 
 
         def changeVel(type, velocity_x, velocity_y, fps, inc, score):
-            # global
+            turn.play()
             if type == pygame.K_RIGHT:
                 if velocity_x == inc:
                     fps += 5
@@ -214,6 +223,7 @@ def Snake_run(who):
         user_key = myresult
         while not exit_game:
             if game_over:
+                hit.play()
                 sql = f"UPDATE `user` SET `snake-score` = '{highscore}' WHERE `user`.`username` = '{who}'"
                 mycursor.execute(sql )
                 mydb.commit()
@@ -228,8 +238,8 @@ def Snake_run(who):
                         return exit_game
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RETURN:
-                            welcome(True)
                             exit_game = True
+                            return False
 
             else:
                 for event in pygame.event.get():
@@ -267,6 +277,7 @@ def Snake_run(who):
                 prnt_snake(gameWindow, black, snake_lst, snake_size, velocity_x, velocity_y)
 
                 if abs(snake_x-food_x) < 10 and abs(snake_y - food_y) < 10:
+                    point.play()
                     score += 10
                     snake_length += 20
                     # print(score)
@@ -276,7 +287,7 @@ def Snake_run(who):
                     highscore = score
             pygame.display.update()
             clock.tick(fps)
-        pygame.quit()
+        # pygame.quit()
 
     welcome(exit_game)
     pygame.quit()
@@ -285,7 +296,6 @@ def Snake_run(who):
 
 #ping pong game
 def Pong_run(who):
-    import pygame
     from random import randint, choice
     from time import time as current_time
 
@@ -342,8 +352,12 @@ def Pong_run(who):
     pygame.display.set_caption("Pong")
     pygame.display.update()
 
-    # TODO: Game functions
 
+    #TODO: audio variables 
+    bounce = pygame.mixer.Sound('sounds/bounce.wav')
+    paddle = pygame.mixer.Sound('sounds/paddle.wav')
+
+    # TODO: Game functions
 
     def write_text(text, x, y, a = ""):
         if a == 'small':
@@ -357,7 +371,7 @@ def Pong_run(who):
             gameWindow.blit(write, [x, y])
 
     def save_score():
-        mycursor.execute("SELECT * from `user` WHERE username = %s", (who, ))
+        mycursor.execute("SELECT * FROM `user` WHERE username = %s", (who, ))
         myresult = mycursor.fetchone()
         highscore = myresult[4]
         if time > highscore:
@@ -397,23 +411,28 @@ def Pong_run(who):
         nonlocal ball_velocity_x, ball_velocity_y
         if ball_x + 10 >= bat_r_x:
             if ball_x >= X:
+                bounce.play()
                 re_play("l", pygame.time.get_ticks())
             else:
                 val = ball_y - (bat_r_y + 30)
                 if abs(val) <= 30:
+                    paddle.play()
                     ball_velocity_x = -ball_inc
                     ball_velocity_y = val // 5
 
         if ball_x - 10 <= bat_l_x:
             if ball_x <= 0:
+                bounce.play()
                 re_play("r", pygame.time.get_ticks())
             else:
                 val = ball_y - (bat_l_y + 30)
                 if abs(val) <= 30:
+                    paddle.play()
                     ball_velocity_x = ball_inc
                     ball_velocity_y = val // 5
 
         if ball_y <= 10 or ball_y >= Y-10:
+            bounce.play()
             ball_velocity_y = -ball_velocity_y
 
 
@@ -586,7 +605,255 @@ def Pong_run(who):
         pygame.display.update()
         clock.tick(fps)
     pygame.quit()
-    print("working")
+    # print("working")
+
+
+#flappy bird game
+def Flappy_play(who):
+    import random  
+    import sys  
+
+    # Global Variables for the game
+    FPS = 32
+    scr_width = 289
+    scr_height = 511
+    display_screen_window = pygame.display.set_mode((scr_width, scr_height))
+    play_ground = scr_height * 0.8
+    game_image = {}
+    game_audio_sound = {}
+    player = 'images/bird.png'
+    bcg_image = 'images/background.png'
+    pipe_image = 'images/pipe.png'
+    time_clock = None
+    Font = None
+    mycursor.execute("SELECT * FROM user WHERE username = %s", (who, ))
+    myresult = mycursor.fetchone()
+    high_score = myresult[5]
+
+    def update_high_score():
+        mycursor.execute(f"UPDATE user SET `flappy-score` = '{high_score}' WHERE user.username = '{who}' ")
+        mydb.commit() 
+
+    def welcome_main_screen():
+        """
+        Shows welcome images on the screen
+        """
+
+        p_x = int(scr_width / 5)
+        p_y = int((scr_height - game_image['player'].get_height()) / 2)
+        msgx = int((scr_width - game_image['message'].get_width()) / 2)
+        msgy = int(scr_height * 0.13)
+        b_x = 0
+        while True:
+            for event in pygame.event.get():
+                # if user clicks on cross button, close the game
+                if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                    pygame.quit()
+                    return True
+                    # sys.exit()
+
+                # If the user presses space or up key, start the game for them
+                elif event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
+                    return False
+                else:
+                    display_screen_window.blit(game_image['background'], (0, 0))
+                    display_screen_window.blit(game_image['player'], (p_x, p_y))
+                    display_screen_window.blit(game_image['message'], (msgx, msgy))
+                    display_screen_window.blit(game_image['base'], (b_x, play_ground))
+                    pygame.display.update()
+                    time_clock.tick(FPS)
+
+
+    def main_gameplay():
+        nonlocal high_score
+        score = 0
+        p_x = int(scr_width / 5)
+        p_y = int(scr_width / 2)
+        b_x = 0
+
+
+        n_pip1 = get_Random_Pipes()
+        n_pip2 = get_Random_Pipes()
+
+
+        up_pips = [
+            {'x': scr_width + 200, 'y': n_pip1[0]['y']},
+            {'x': scr_width + 200 + (scr_width / 2), 'y': n_pip2[0]['y']},
+        ]
+
+        low_pips = [
+            {'x': scr_width + 200, 'y': n_pip1[1]['y']},
+            {'x': scr_width + 200 + (scr_width / 2), 'y': n_pip2[1]['y']},
+        ]
+
+        pip_Vx = -4
+
+        p_vx = -9
+        p_mvx = 10
+        p_mvy = -8
+        p_accuracy = 1
+
+        p_flap_accuracy = -8
+        p_flap = False
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                    pygame.quit()
+                    return True
+                    # sys.exit()
+                if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
+                    if p_y > 0:
+                        p_vx = p_flap_accuracy
+                        p_flap = True
+                        game_audio_sound['wing'].play()
+
+            cr_tst = is_Colliding(p_x, p_y, up_pips,
+                                  low_pips)
+            if cr_tst:
+                if score > high_score:
+                    high_score = score
+                    update_high_score()
+                return False
+
+
+            p_middle_positions = p_x + game_image['player'].get_width() / 2
+            for pipe in up_pips:
+                pip_middle_positions = pipe['x'] + game_image['pipe'][0].get_width() / 2
+                if pip_middle_positions <= p_middle_positions < pip_middle_positions + 4:
+                    score += 1
+                    # print(f"Your score is {score}")
+                    game_audio_sound['point'].play()
+
+            if p_vx < p_mvx and not p_flap:
+                p_vx += p_accuracy
+
+            if p_flap:
+                p_flap = False
+            p_height = game_image['player'].get_height()
+            p_y = p_y + min(p_vx, play_ground - p_y - p_height)
+
+
+            for pip_upper, pip_lower in zip(up_pips, low_pips):
+                pip_upper['x'] += pip_Vx
+                pip_lower['x'] += pip_Vx
+
+
+            if 0 < up_pips[0]['x'] < 5:
+                new_pip = get_Random_Pipes()
+                up_pips.append(new_pip[0])
+                low_pips.append(new_pip[1])
+
+
+            if up_pips[0]['x'] < -game_image['pipe'][0].get_width():
+                up_pips.pop(0)
+                low_pips.pop(0)
+
+
+            display_screen_window.blit(game_image['background'], (0, 0))
+            for pip_upper, pip_lower in zip(up_pips, low_pips):
+                display_screen_window.blit(game_image['pipe'][0], (pip_upper['x'], pip_upper['y']))
+                display_screen_window.blit(game_image['pipe'][1], (pip_lower['x'], pip_lower['y']))
+
+            display_screen_window.blit(game_image['base'], (b_x, play_ground))
+            display_screen_window.blit(game_image['player'], (p_x, p_y))
+            d = [int(x) for x in list(str(score))]
+            w = 0
+            for digit in d:
+                w += game_image['numbers'][digit].get_width()
+            Xoffset = (scr_width - w) / 2
+
+            for digit in d:
+                display_screen_window.blit(game_image['numbers'][digit], (Xoffset, scr_height * 0.12))
+                Xoffset += game_image['numbers'][digit].get_width()
+            text = Font.render(f'High score: {high_score}', True, (0, 0, 0))
+            text_rect = text.get_rect()
+            text_rect.center = (scr_width//2, 15)
+            display_screen_window.blit(text, text_rect)
+            pygame.display.update()
+            time_clock.tick(FPS)
+
+
+    def is_Colliding(p_x, p_y, up_pipes, low_pipes):
+        if p_y > play_ground - 25 or p_y < 0:
+            game_audio_sound['hit'].play()
+            return True
+
+        for pipe in up_pipes:
+            pip_h = game_image['pipe'][0].get_height()
+            if (p_y < pip_h + pipe['y'] and abs(p_x - pipe['x']) < game_image['pipe'][0].get_width()):
+                game_audio_sound['hit'].play()
+                return True
+
+        for pipe in low_pipes:
+            if (p_y + game_image['player'].get_height() > pipe['y']) and abs(p_x - pipe['x']) < \
+                    game_image['pipe'][0].get_width():
+                game_audio_sound['hit'].play()
+                return True
+
+        return False
+
+
+    def get_Random_Pipes():
+        """
+        Generate positions of two pipes
+        """
+        pip_h = game_image['pipe'][0].get_height()
+        off_s = scr_height / 3
+        yes2 = off_s + random.randrange(0, int(scr_height - game_image['base'].get_height() - 1.2 * off_s))
+        pipeX = scr_width + 10
+        y1 = pip_h - yes2 + off_s
+        pipe = [
+            {'x': pipeX, 'y': -y1},  # upper Pipe
+            {'x': pipeX, 'y': yes2}  # lower Pipe
+        ]
+        return pipe
+
+
+    def main():
+        nonlocal game_image, game_audio_sound, time_clock, Font
+        exit = False
+        pygame.init()
+        time_clock = pygame.time.Clock()
+        Font = pygame.font.SysFont('consolas', 15)
+        pygame.display.set_caption('Flappy Bird Game')
+        game_image['numbers'] = (
+            pygame.image.load('images/0.png').convert_alpha(),
+            pygame.image.load('images/1.png').convert_alpha(),
+            pygame.image.load('images/2.png').convert_alpha(),
+            pygame.image.load('images/3.png').convert_alpha(),
+            pygame.image.load('images/4.png').convert_alpha(),
+            pygame.image.load('images/5.png').convert_alpha(),
+            pygame.image.load('images/6.png').convert_alpha(),
+            pygame.image.load('images/7.png').convert_alpha(),
+            pygame.image.load('images/8.png').convert_alpha(),
+            pygame.image.load('images/9.png').convert_alpha(),
+        )
+
+        game_image['message'] = pygame.image.load('images/message.png').convert_alpha()
+        game_image['base'] = pygame.image.load('images/base.png').convert_alpha()
+        game_image['pipe'] = (pygame.transform.rotate(pygame.image.load(pipe_image).convert_alpha(), 180),
+                              pygame.image.load(pipe_image).convert_alpha()
+                              )
+
+        # Game sounds
+        game_audio_sound['die'] = pygame.mixer.Sound('sounds/die.wav')
+        game_audio_sound['hit'] = pygame.mixer.Sound('sounds/hit.wav')
+        game_audio_sound['point'] = pygame.mixer.Sound('sounds/point.wav')
+        game_audio_sound['swoosh'] = pygame.mixer.Sound('sounds/swoosh.wav')
+        game_audio_sound['wing'] = pygame.mixer.Sound('sounds/wing.wav')
+
+        game_image['background'] = pygame.image.load(bcg_image).convert()
+        game_image['player'] = pygame.image.load(player).convert_alpha()
+
+        while not exit:
+            exit = welcome_main_screen()  
+            if not exit:
+                exit = main_gameplay()  
+
+    main()
+
+# Flappy_play()
 
 # to hide a widget
 def hide_widget(*Widget):
@@ -706,16 +973,32 @@ def menu():
     leaderboard_text = ""
     mycursor.execute("SELECT `username`, `snake-score` FROM `user` ORDER BY `snake-score` DESC")
     myresult = mycursor.fetchall()
+    my_snake_score = None
     for name , score in myresult:
         leaderboard_text += f"{name}\t\t{score}\n"
-    snake.create_text((win_width-100, 50), text = "***LEADERBOARD***\n\n"+leaderboard_text, font = font2, fill = "black", anchor = 'ne')
-
+        if name == current_user:
+            my_snake_score = score
+    snake.create_text((win_width-100, 50), text = "***LEADERBOARD***\n\nNAME\t\tSCORE\n"+leaderboard_text, font = font2, fill = "black", anchor = 'ne')
+    snake.create_text((win_width//2, 650), text = f"Hello {current_user}, your highscore is: {my_snake_score}", font = font3, fill = "black", anchor = 'c')
+    
 
     #---------------------------------FLAPPY RELATED STUFF----------------------------------------------
 
     flappy = Canvas(box, width = win_width - 40, height = win_height - 50, borderwidth = 5, relief = SUNKEN)
     flappy.grid(row = 1, column = 0)
     flappy.create_image((5, 5) , image = bg3, anchor = "nw")
+    play_flappy = flappy.create_window(500, 500, window = Button(flappy, text = 'PLAY', font = font3, bg = '#bc1616', borderwidth = 0, width = 10, fg = '#030931', command = lambda : Flappy_play(current_user)))
+    flappy.create_text((50, 50), text = "Use spasebar or up arrow to start the game and \nmake the bird flapp.", font = font2, fill = "white", anchor = "nw")
+    flappy_score = ""
+    mycursor.execute("SELECT username , `flappy-score` FROM user ORDER BY `flappy-score` DESC")
+    myresult = mycursor.fetchall()
+    my_flappy_score = None
+    for name, score in myresult:
+        flappy_score += f"{name}\t\t{score}\n"
+        if name == current_user:
+            my_flappy_score = score
+    flappy.create_text((win_width-100, 50), text = "***LEADERBOARD***\n\nNAME\t\tSCORE\n"+flappy_score, font = font2, fill = "black", anchor = 'ne')
+    flappy.create_text((win_width//2, 600), text = f"Hello {current_user}, your highscore is: {my_flappy_score}", font = font3, fill = "black", anchor = 'c')
 
 
     #--------------------------------PONG RELATED STUFF----------------------------------------------
@@ -727,16 +1010,20 @@ def menu():
     history = "NAME\t\tWIN TIME\n\n" 
     mycursor.execute("SELECT `username` , `pong-history` FROM `user` ORDER BY `pong-history` ASC")
     myresult = mycursor.fetchall()
+    my_pong_score = None
     for name, score in myresult:
         if score != 0:
             history += f"{name}\t\t{score}\n"
+        else:
+            history += f"{name}\t\tnone\n"
+        if name == current_user:
+            my_pong_score = score if score != 0 else 'None'
     pong.create_text((win_width - 100, 220), text = "   ***LEADERBOARD***\n"+history, font = font2, fill = "#00bbbb", anchor = 'ne')
-    # pong.create_text
+    pong.create_text((win_width//2, 600), text = f"Hello {current_user}, your score is: {my_pong_score}", font = font3, fill = "black", anchor = 'c')
 
-# menu()  # TODO: Delete from here
 
 #-------------------------------------------------------INTRO PAGE---------------------------------------------------------------------
-bg1 = Image.open("bg1.jpg")
+bg1 = Image.open("images/bg1.jpg")
 bg1 = ImageTk.PhotoImage(bg1)
 canvas = Canvas(root, width = win_width, height = win_height, bg = "black" )
 canvas.pack(fill = "both")
