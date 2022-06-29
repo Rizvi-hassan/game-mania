@@ -70,7 +70,7 @@ root.maxsize(win_width, win_height)
 def Snake_run(who):
     import random
     pygame.init()
-
+    pygame.mixer.init()
 
     # Colors
     white = (96, 152, 0)
@@ -223,7 +223,6 @@ def Snake_run(who):
         user_key = myresult
         while not exit_game:
             if game_over:
-                hit.play()
                 sql = f"UPDATE `user` SET `snake-score` = '{highscore}' WHERE `user`.`username` = '{who}'"
                 mycursor.execute(sql )
                 mydb.commit()
@@ -259,7 +258,9 @@ def Snake_run(who):
                 # gameover
                 if snake_x < 0 or snake_x > screen_width or snake_y < 0 or snake_y > screen_height:
                     game_over = True
+                    hit.play()
                 if [snake_x, snake_y] in snake_lst[: -1]:
+                    hit.play()
                     game_over = True
 
                 # show score
@@ -301,6 +302,7 @@ def Pong_run(who):
 
     # TODO: Initialisation
     pygame.init()
+    pygame.mixer.init()
     font = pygame.font.SysFont("Segoe UI", 35)
     font2 = pygame.font.SysFont("Segoe UI", 55)
     font3 = pygame.font.SysFont("consolas", 25)
@@ -611,7 +613,7 @@ def Pong_run(who):
 #flappy bird game
 def Flappy_play(who):
     import random  
-    import sys  
+    # import sys  
 
     # Global Variables for the game
     FPS = 32
@@ -814,6 +816,7 @@ def Flappy_play(who):
         nonlocal game_image, game_audio_sound, time_clock, Font
         exit = False
         pygame.init()
+        pygame.mixer.init()
         time_clock = pygame.time.Clock()
         Font = pygame.font.SysFont('consolas', 15)
         pygame.display.set_caption('Flappy Bird Game')
@@ -913,6 +916,9 @@ def register():
                 menu()
             else:
                 invalid_register.grid(row = 0, column = 2)
+    else:
+        invalid_register.grid(row = 0, column = 2)
+        
     clear_entry(new_userentry, new_passentry, re_passentry)
 
 # Funcion to Check Login related querry
