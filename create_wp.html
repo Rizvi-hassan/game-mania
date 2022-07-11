@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    *{
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body{
+        width: 100vw;
+        height: 100vh;
+        display: grid;
+        align-items: center;
+    }
+    .content{
+        display: block;
+        border: 2px solid black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: row;
+    }
+    .box{
+        border: 3px solid blue;
+        width: 100px;
+        height: 100px;
+
+    }
+    #box1{
+        background: url('images/snake_fg.jpg') no-repeat center/cover;
+    }
+    #box2{
+        background: url('images/flappy_fg.jpg') no-repeat center/cover;
+    }
+    #box3{
+        background: url('images/pong_fg.jpg') no-repeat center/cover;
+    }
+</style>
+<body>
+    <div class="content">
+        <div class = "box" id="box1"></div>
+        <div class = "box" id="box2"></div>
+        <div class = "box" id="box3"></div>
+    </div>
+</body>
+</html>

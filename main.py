@@ -39,6 +39,10 @@ font3 = tkFont.Font(family = "Rockwell Extra Bold", size = 20, weight = "bold", 
 current_user = ""
 
 #TODO: Image variables
+bg0 = Image.open("images/menu.png")
+bg0 = bg0.resize((win_width-12, win_height-12))
+bg0 = ImageTk.PhotoImage(bg0)
+
 bg1 = Image.open("images/bg1.jpg")
 bg1 = bg1.resize((win_width, win_height))
 bg1 = ImageTk.PhotoImage(bg1)
@@ -48,11 +52,11 @@ bg2 = bg2.resize((win_width, win_height))
 bg2 = ImageTk.PhotoImage(bg2)
 
 bg3 = Image.open("images/flappy_fg.jpg")
-bg3 = bg3.resize((win_width-40, win_height-50))
+bg3 = bg3.resize((win_width, win_height))
 bg3 = ImageTk.PhotoImage(bg3)
 
 bg4 = Image.open("images/pong_fg.jpg")
-bg4 = bg4.resize((win_width-40, win_height-50))
+bg4 = bg4.resize((win_width, win_height))
 bg4 = ImageTk.PhotoImage(bg4)
 
 
@@ -947,86 +951,110 @@ def login():
 def menu():
     canvas.pack_forget()
     hide_widget(login_box, register_box)
+    
+    box = Frame(root )
+    box.pack(fill = BOTH, expand = 1)
 
-    # Create A Main Frame
-    main_frame = Frame(root)
-    main_frame.pack(fill=BOTH, expand=1)
+    def switch_window(From, To):
+        From.grid_forget()
+        To()
 
-    # Create A Canvas
-    display = Canvas(main_frame)
-    display.pack(side=LEFT, fill=BOTH, expand=1)
+    #---------------------------------SELECT RELATED STUFF---------------------------------------------
+    def select_func():
+        select_box = Canvas(box, width = win_width-10, height = win_height-10, borderwidth = 4, relief = SUNKEN)
+        select_box.grid(row = 0, column = 0)
+        select_box.create_image((5, 5), image = bg0, anchor = "nw")
+        play_snake = select_box.create_window(180, 500, window = Button(select_box, text = 'SELECT', font = font3, bg = 'brown', borderwidth = 0, width = 10, fg = 'orange', command = lambda : switch_window(select_box, snake_func)))
+        play_flappy = select_box.create_window(500, 500, window = Button(select_box, text = 'SELECT', font = font3, bg = '#bc1616', borderwidth = 0, width = 10, fg = '#030931', command = lambda : switch_window(select_box, flappy_func)))
+        play_pong = select_box.create_window(820, 500, window = Button(select_box, text = 'SELECT', font = font3, bg = '#0a195c', borderwidth = 0, width = 10, fg = '#d02b7b', command = lambda : switch_window(select_box, pong_func)))
+        head_1 = select_box.create_text((180, 100), text = "SNAKE PASS", font = font3, fill = "#0c2920")
+        head_2 = select_box.create_text((500, 100), text = "FLAPPY BIRD", font = font3, fill = "#0c2920")
+        head_3 = select_box.create_text((820, 100), text = "PING PONG", font = font3, fill = "#0c2920")
 
-    # Add A Scrollbar To The Canvas
-    scrollbar = ttk.Scrollbar(main_frame, orient=VERTICAL, command=display.yview)
-    scrollbar.pack(side=RIGHT, fill=Y)
-
-    # Configure The Canvas
-    display.configure(yscrollcommand=scrollbar.set)
-    display.bind('<Configure>', lambda e: display.configure(scrollregion = display.bbox("all")))
-
-    # Create ANOTHER Frame INSIDE the Canvas
-    box = Frame(display )
-
-    # Add that New frame To a Window In The Canvas
-    display.create_window((0,0), window=box, anchor="nw")
 
     #---------------------------------SNAKE RELATED STUFF----------------------------------------------
-    snake = Canvas(box, width = win_width - 40, height = win_height, borderwidth = 5, relief = SUNKEN)
-    snake.grid(row = 0, column = 0)
-    snake.create_image((5, 5) , image = bg2, anchor = "nw")
-    play_snake = snake.create_window(500, 550, window = Button(snake, text = "PLAY", font = font3, bg = '#bc1616', borderwidth = 0, width = 10, fg = '#030931', command = lambda : Snake_run(current_user))) 
-    snake.create_text((50, 50), text = "Instructions: \n*Use arrow keys in your \nmouse to change the directons\n of the snake.\n*Increase or decrease \nthe speed of snake by pressing \narrow keys several times.", font = font2, fill = "white", anchor = "nw")
-    leaderboard_text = ""
-    mycursor.execute("SELECT `username`, `snake-score` FROM `user` ORDER BY `snake-score` DESC")
-    myresult = mycursor.fetchall()
-    my_snake_score = None
-    for name , score in myresult:
-        leaderboard_text += f"{name}\t\t{score}\n"
-        if name == current_user:
-            my_snake_score = score
-    snake.create_text((win_width-100, 50), text = "***LEADERBOARD***\n\nNAME\t\tSCORE\n"+leaderboard_text, font = font2, fill = "black", anchor = 'ne')
-    snake.create_text((win_width//2, 650), text = f"Hello {current_user}, your highscore is: {my_snake_score}", font = font3, fill = "black", anchor = 'c')
-    
+    def snake_func():
+        snake = Canvas(box, width = win_width-10, height = win_height-10, borderwidth = 4, relief = SUNKEN)
+        snake.grid(row = 0, column = 0)
+        snake.create_image((5, 5) , image = bg2, anchor = "nw")
+        play_snake = snake.create_window(500, 550, window = Button(snake, text = "PLAY", font = font3, bg = '#bc1616', borderwidth = 0, width = 10, fg = '#030931', command = lambda : Snake_run(current_user))) 
+        snake.create_text((50, 50), text = "Instructions: \n*Use arrow keys in your \nmouse to change the directons\n of the snake.\n*Increase or decrease \nthe speed of snake by pressing \narrow keys several times.", font = font2, fill = "white", anchor = "nw")
+        mycursor.execute("SELECT `username`, `snake-score` FROM `user` ORDER BY `snake-score` DESC")
+        myresult = mycursor.fetchall()
+        my_snake_score = None
+        snake_content = Label(snake, relief = SUNKEN, borderwidth = 4)
+        snake_v = Scrollbar(snake_content)
+        snake_v.pack(side = RIGHT, fill = Y)
+        snake_t = Text(snake_content, width = 22, height = 16, wrap = NONE, yscrollcommand = snake_v.set, bg = "silver")
+        snake_t.insert(END, "*****LEADERBOARD*****\n")
+        snake_t.insert(END, "NAME\t\tSCORE\n")
+        for name , score in myresult:
+            snake_t.insert(END, f"{name}\t\t{score}\n")
+            if name == current_user:
+                my_snake_score = score
+        snake_t.pack(side = TOP, fill = X)
+        snake_v.config(command = snake_t.yview)
+        snake.create_window(800, 170, window = snake_content)
+        snake.create_text((win_width//2, 600), text = f"Hello {current_user}, your highscore is: {my_snake_score}", font = font3, fill = "black", anchor = 'c')
+        go_back_snake = snake.create_window(870, 650, window = Button(snake, text = 'BACK', font = font3, bg = 'brown', borderwidth = 0, width = 7, fg = 'orange', command = lambda : switch_window(snake, select_func)))
+
+
 
     #---------------------------------FLAPPY RELATED STUFF----------------------------------------------
+    def flappy_func():
+        flappy = Canvas(box, width = win_width-10, height = win_height - 10, borderwidth = 5, relief = SUNKEN)
+        flappy.grid(row = 1, column = 0)
+        flappy.create_image((5, 5) , image = bg3, anchor = "nw")
+        play_flappy = flappy.create_window(500, 500, window = Button(flappy, text = 'PLAY', font = font3, bg = '#bc1616', borderwidth = 0, width = 10, fg = '#030931', command = lambda : Flappy_play(current_user)))
+        flappy.create_text((50, 50), text = "Use spasebar or up arrow to start the game and \nmake the bird flapp.", font = font2, fill = "white", anchor = "nw")
+        mycursor.execute("SELECT username , `flappy-score` FROM user ORDER BY `flappy-score` DESC")
+        myresult = mycursor.fetchall()
+        my_flappy_score = 0
+        flappy_content = Label(flappy, relief = SUNKEN, borderwidth = 4)
+        flappy_v = Scrollbar(flappy_content)
+        flappy_v.pack(side = RIGHT, fill = Y)
+        flappy_t = Text(flappy_content, width = 22, height = 16, wrap = NONE, yscrollcommand = flappy_v.set, bg = "silver")
+        flappy_t.insert(END, "*****LEADERBOARD*****\n")
+        flappy_t.insert(END, "NAME\t\tSCORE\n")
+        for name, score in myresult:
+            flappy_t.insert(END, f"{name}\t\t{score}\n")
+            if name == current_user:
+                my_flappy_score = score
+        flappy_t.pack(side = TOP, fill = X)
+        flappy_v.config(command = flappy_t.yview)
+        flappy.create_window(800, 170, window = flappy_content)
+        flappy.create_text((win_width//2, 600), text = f"Hello {current_user}, your highscore is: {my_flappy_score}", font = font3, fill = "black", anchor = 'c')
+        go_back_flappy = flappy.create_window(870, 650, window = Button(flappy, text = 'BACK', font = font3, bg = 'brown', borderwidth = 0, width = 7, fg = 'orange', command = lambda : switch_window(flappy, select_func)))
 
-    flappy = Canvas(box, width = win_width - 40, height = win_height - 50, borderwidth = 5, relief = SUNKEN)
-    flappy.grid(row = 1, column = 0)
-    flappy.create_image((5, 5) , image = bg3, anchor = "nw")
-    play_flappy = flappy.create_window(500, 500, window = Button(flappy, text = 'PLAY', font = font3, bg = '#bc1616', borderwidth = 0, width = 10, fg = '#030931', command = lambda : Flappy_play(current_user)))
-    flappy.create_text((50, 50), text = "Use spasebar or up arrow to start the game and \nmake the bird flapp.", font = font2, fill = "white", anchor = "nw")
-    flappy_score = ""
-    mycursor.execute("SELECT username , `flappy-score` FROM user ORDER BY `flappy-score` DESC")
-    myresult = mycursor.fetchall()
-    my_flappy_score = None
-    for name, score in myresult:
-        flappy_score += f"{name}\t\t{score}\n"
-        if name == current_user:
-            my_flappy_score = score
-    flappy.create_text((win_width-100, 50), text = "***LEADERBOARD***\n\nNAME\t\tSCORE\n"+flappy_score, font = font2, fill = "black", anchor = 'ne')
-    flappy.create_text((win_width//2, 600), text = f"Hello {current_user}, your highscore is: {my_flappy_score}", font = font3, fill = "black", anchor = 'c')
 
-
-    #--------------------------------PONG RELATED STUFF----------------------------------------------
-    pong = Canvas(box, width = win_width - 40, height = win_height - 50, borderwidth = 5, relief = SUNKEN)
-    pong.grid(row = 2, column = 0)
-    pong.create_image((5, 5) , image = bg4, anchor = "nw")
-    play_pong = pong.create_window(500, 550, window = Button(pong, text = "PLAY", font = font3, bg = '#0a195c', borderwidth = 0, width = 10, fg = '#d02b7b', command = lambda : Pong_run(current_user))) 
-    pong.create_text((40, 200,), text = "INSTRUCTIONS: \n*For multiplayer, Use up arrow and \ndown arrow to move right paddle.\nUse s and w keys to move left paddle.\n*For singleplayer, move your \nmouse up and down to move the paddle.\n\n The one who scores 15 points first becomes the winner\nOnly Singleplayer best time is recorded for leaderboard", font = font2, fill = "#00fba7", anchor = "nw")
-    history = "NAME\t\tWIN TIME\n\n" 
-    mycursor.execute("SELECT `username` , `pong-history` FROM `user` ORDER BY `pong-history` ASC")
-    myresult = mycursor.fetchall()
-    my_pong_score = None
-    for name, score in myresult:
-        if score != 0:
-            history += f"{name}\t\t{score}\n"
-        else:
-            history += f"{name}\t\tnone\n"
-        if name == current_user:
-            my_pong_score = score if score != 0 else 'None'
-    pong.create_text((win_width - 100, 220), text = "   ***LEADERBOARD***\n"+history, font = font2, fill = "#00bbbb", anchor = 'ne')
-    pong.create_text((win_width//2, 600), text = f"Hello {current_user}, your score is: {my_pong_score}", font = font3, fill = "black", anchor = 'c')
-
+   #--------------------------------PONG RELATED STUFF----------------------------------------------
+    def pong_func():
+        pong = Canvas(box, width = win_width-10, height = win_height-10, borderwidth = 5, relief = SUNKEN)
+        pong.grid(row = 2, column = 0)
+        pong.create_image((5, 5) , image = bg4, anchor = "nw")
+        play_pong = pong.create_window(500, 550, window = Button(pong, text = "PLAY", font = font3, bg = '#0a195c', borderwidth = 0, width = 10, fg = '#d02b7b', command = lambda : Pong_run(current_user))) 
+        pong.create_text((40, 200,), text = "INSTRUCTIONS: \n*For multiplayer, Use up arrow and \ndown arrow to move right paddle.\nUse s and w keys to move left paddle.\n*For singleplayer, move your \nmouse up and down to move the paddle.\n\n The one who scores 15 points first becomes the winner\nOnly Singleplayer best time is recorded for leaderboard", font = font2, fill = "#00fba7", anchor = "nw")
+        mycursor.execute("SELECT `username` , `pong-history` FROM `user` ORDER BY `pong-history` ASC")
+        myresult = mycursor.fetchall()
+        my_pong_score = None
+        pong_content = Label(pong, relief = SUNKEN, borderwidth = 4)
+        pong_v = Scrollbar(pong_content)
+        pong_v.pack(side = RIGHT, fill = Y)
+        pong_t = Text(pong_content, width = 22, height = 16, wrap = NONE, yscrollcommand = pong_v.set, bg = "silver")
+        pong_t.insert(END, "*****LEADERBOARD*****\n")
+        pong_t.insert(END, "NAME\t\tSCORE\n")
+        pong_t.insert(END, "\n")
+        for name, score in myresult:
+            pong_t.insert(END, f"{name}\t\t{score}\n")
+            if name == current_user:
+                my_pong_score = score 
+        pong_t.pack(side = TOP, fill = X)
+        pong_v.config(command = pong_t.yview)
+        pong.create_window(800, 170, window = pong_content)
+        pong.create_text((win_width//2, 600), text = f"Hello {current_user}, your score is: {my_pong_score}", font = font3, fill = "black", anchor = 'c')
+        go_back_pong = pong.create_window(870, 650, window = Button(pong, text = 'BACK', font = font3, bg = 'brown', borderwidth = 0, width = 7, fg = 'orange', command = lambda : switch_window(pong, select_func)))
+    
+    select_func()
 
 #-------------------------------------------------------INTRO PAGE---------------------------------------------------------------------
 bg1 = Image.open("images/bg1.jpg")
