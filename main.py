@@ -39,6 +39,9 @@ font3 = tkFont.Font(family = "Rockwell Extra Bold", size = 20, weight = "bold", 
 current_user = ""
 
 #TODO: Image variables
+logo = Image.open("images/logo.jpg")
+logo = ImageTk.PhotoImage(logo)
+
 bg0 = Image.open("images/menu.png")
 bg0 = bg0.resize((win_width-12, win_height-12))
 bg0 = ImageTk.PhotoImage(bg0)
@@ -66,6 +69,7 @@ bg4 = ImageTk.PhotoImage(bg4)
 root.geometry(f"{win_width}x{win_height}")
 root.minsize(win_width, win_height)
 root.maxsize(win_width, win_height)
+root.iconphoto(False, logo)
 
 
 #TODO: FUCNTIONS 
