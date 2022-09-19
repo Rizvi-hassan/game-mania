@@ -9,7 +9,7 @@ mycursor = mydb.cursor()
 
 #creating the database
 mycursor.execute("CREATE DATABASE `game-mania`")
-mycursor.execute("use `game-mania_2`")
+mycursor.execute("use `game-mania`")
 
 #creating table
 mycursor.execute("CREATE TABLE user (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(225) NOT NULL , password VARCHAR(225) NOT NULL ) ")
