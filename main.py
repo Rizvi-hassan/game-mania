@@ -946,7 +946,8 @@ def login():
         if user in userlist:
             index = userlist.index(user)
             if pas == passwordlist[index]:
-                if myresult[0][2] == 0:
+                if myresult[index][2] == 0:
+                    clear_entry(userentry, passentry)
                     admin_panel()
                 else:
                     current_user = user
@@ -1077,20 +1078,47 @@ def menu():
 def admin_panel():
     admin = Toplevel(root)
     admin.title('Admin Panel')
-    admin.geometry('600x300')
-    page = Canvas(admin, width = 600, height = 300, bg = 'grey')
-    page.pack()
-    page.create_text(200, 20, text = 'Admin Panel', font = font3)
+    admin.geometry('700x500')
+    admin.minsize(1000, 500)
+    admin.maxsize(1000, 500)
     mycursor.execute("SELECT * FROM `user` WHERE `id` != 0 ORDER BY `id`")
     myresult = mycursor.fetchall()
-    # table = Label(admin, borderwidth = 4)
-    table_v = Scrollbar(admin)
-    table_v.pack(side = RIGHT, fill = Y)
-    text = Text(admin, width = 600, height = 260, wrap = NONE, yscrollcommand = table_v.set, bg = 'grey')
-    text.insert(END, "*************DATA")
-    text.pack(side = TOP, fill = X)
-    table_v.config(command = text.yview)
-    admin.create_window(100, 260, window = text)
+    s = ttk.Style()
+    s.theme_use('clam')
+
+    tree = ttk.Treeview(admin, column = ('c1', 'c2','c3', 'c4', 'c5', 'c6', 'c7', 'c8'), show = 'headings', height = len(myresult))
+    scbar = Scrollbar(admin, command = tree.yview)
+    scbar.pack(side = 'right', fill = Y)
+    tree.configure(xscrollcommand = scbar.set)
+
+    tree.column('# 1', anchor = CENTER, width = 100, stretch = NO)
+    tree.heading('# 1', text = 'ID')
+
+    tree.column('# 2', anchor = CENTER, width = 100, stretch = NO)
+    tree.heading('# 2', text = 'NAME')
+    
+    tree.column('# 3', anchor = CENTER, width = 100, stretch = NO)
+    tree.heading('# 3', text = 'PASSWORD')
+    
+    tree.column('# 4', anchor = CENTER, width = 100, stretch = NO)
+    tree.heading('# 4', text = 'SNAKE SCORE')
+    
+    tree.column('# 5', anchor = CENTER, width = 100, stretch = NO)
+    tree.heading('# 5', text = 'FLAPPY SCORE')
+    
+    tree.column('# 6', anchor = CENTER, width = 100, stretch = NO)
+    tree.heading('# 6', text = 'PONG SCORE')
+    
+    tree.column('# 7', anchor = CENTER, width = 150, stretch = NO)
+    tree.heading('# 7', text = 'DOJ')
+    
+    tree.column('# 8', anchor = CENTER, width = 150, stretch = NO)
+    tree.heading('# 8', text = 'LAST SEEN')
+    
+    for i in range(len(myresult)):
+        tree.insert('', END, values = myresult[i])
+
+    tree.pack()
 
     admin.mainloop()
 
