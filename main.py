@@ -16,13 +16,15 @@ root.title("Game Mania")
 
 
 #TODO: Mysql initializaton
-import mysql.connector
-mydb = mysql.connector.connect(
-    host = "localhost",
-    user = "root", 
-    password = "",
-    database = "game-mania"
-)
+# import mysql.connector
+# mydb = mysql.connector.connect(
+#     host = "localhost",
+#     user = "root", 
+#     password = "",
+#     database = "game-mania"
+# )
+import sqlite3
+mydb = sqlite3.connect("game-mania.db")
 mycursor = mydb.cursor()
 
 
@@ -228,9 +230,9 @@ def Snake_run(who):
         score = 0
         snake_lst = []
         snake_length = 1
-        mycursor.execute("SELECT * from `user` WHERE username = %s", (who, ))
+        mycursor.execute("SELECT * from `user` WHERE username = ?", (who, ))
         myresult = mycursor.fetchone()
-        highscore = myresult[3]
+        highscore = myresult[2]
         user_key = myresult
         while not exit_game:
             if game_over:
@@ -386,7 +388,7 @@ def Pong_run(who):
     def save_score(score):
         mycursor.execute("SELECT * FROM `user` WHERE username = %s", (who, ))
         myresult = mycursor.fetchone()
-        highscore = myresult[5]
+        highscore = myresult[4]
         if score > highscore:
             mycursor.execute(f"UPDATE `user` SET `pong-history` = '{score}' WHERE `user`.`username` = '{who}'")
             mydb.commit()
@@ -639,9 +641,9 @@ def Flappy_play(who):
     pipe_image = 'images/pipe.png'
     time_clock = None
     Font = None
-    mycursor.execute("SELECT * FROM user WHERE username = %s", (who, ))
+    mycursor.execute(f"SELECT * FROM user WHERE username = '{who}'" )
     myresult = mycursor.fetchone()
-    high_score = myresult[5]
+    high_score = myresult[3]
 
     def update_high_score():
         mycursor.execute(f"UPDATE user SET `flappy-score` = '{high_score}' WHERE user.username = '{who}' ")
@@ -919,7 +921,7 @@ def register():
             myresult = mycursor.fetchall()
             result = [i[0] for i in myresult]
             if user not in result:
-                sql = "INSERT INTO user (username, password) VALUES (%s, %s)"
+                sql = "INSERT INTO user (username, password) VALUES (?, ?)"
                 val = (user, pas)
                 mycursor.execute(sql, val)
                 mydb.commit()
@@ -938,7 +940,7 @@ def login():
     invalid_user.grid_forget()
     user, pas = userentry.get().strip(), passentry.get().strip()
     if user and pas:
-        sql = "SELECT username, password, id FROM user"
+        sql = "SELECT username, password FROM user"
         mycursor.execute(sql)
         myresult = mycursor.fetchall()
         userlist = [i[0] for i in myresult]
@@ -946,7 +948,7 @@ def login():
         if user in userlist:
             index = userlist.index(user)
             if pas == passwordlist[index]:
-                if myresult[index][2] == 0:
+                if user == "admin@121":
                     clear_entry(userentry, passentry)
                     admin_panel()
                 else:
@@ -993,7 +995,7 @@ def menu():
         snake.create_image((5, 5) , image = bg2, anchor = "nw")
         play_snake = snake.create_window(500, 550, window = Button(snake, text = "PLAY", font = font3, bg = '#bc1616', borderwidth = 0, width = 10, fg = '#030931', command = lambda : Snake_run(current_user))) 
         snake.create_text((50, 50), text = "Instructions: \n*Use arrow keys in your \nmouse to change the directons\n of the snake.\n*Increase or decrease \nthe speed of snake by pressing \narrow keys several times.", font = font2, fill = "white", anchor = "nw")
-        mycursor.execute("SELECT `username`, `snake-score` FROM `user` ORDER BY `snake-score` DESC")
+        mycursor.execute("SELECT `username`, `snake-score` FROM `user` WHERE `username` != 'admin@121' ORDER BY `snake-score` DESC")
         myresult = mycursor.fetchall()
         my_snake_score = None
         snake_content = Label(snake, relief = SUNKEN, borderwidth = 4)
@@ -1022,7 +1024,7 @@ def menu():
         flappy.create_image((5, 5) , image = bg3, anchor = "nw")
         play_flappy = flappy.create_window(500, 500, window = Button(flappy, text = 'PLAY', font = font3, bg = '#bc1616', borderwidth = 0, width = 10, fg = '#030931', command = lambda : Flappy_play(current_user)))
         flappy.create_text((50, 50), text = "Use spasebar or up arrow to start the game and \nmake the bird flapp.", font = font2, fill = "white", anchor = "nw")
-        mycursor.execute("SELECT username , `flappy-score` FROM user ORDER BY `flappy-score` DESC")
+        mycursor.execute("SELECT username , `flappy-score` FROM user WHERE `username` != 'admin@121' ORDER BY `flappy-score` DESC")
         myresult = mycursor.fetchall()
         my_flappy_score = 0
         flappy_content = Label(flappy, relief = SUNKEN, borderwidth = 4)
@@ -1050,7 +1052,7 @@ def menu():
         pong.create_image((5, 5) , image = bg4, anchor = "nw")
         play_pong = pong.create_window(500, 550, window = Button(pong, text = "PLAY", font = font3, bg = '#0a195c', borderwidth = 0, width = 10, fg = '#d02b7b', command = lambda : Pong_run(current_user))) 
         pong.create_text((40, 200,), text = "INSTRUCTIONS: \n*For multiplayer, Use up arrow and \ndown arrow to move right paddle.\nUse s and w keys to move left paddle.\n*For singleplayer, move your \nmouse up and down to move the paddle.\n\n The one who scores 15 points first becomes the winner\nOnly Singleplayer best time is recorded for leaderboard", font = font2, fill = "#00fba7", anchor = "nw")
-        mycursor.execute("SELECT `username` , `pong-history` FROM `user` ORDER BY `pong-history` DESC")
+        mycursor.execute("SELECT `username` , `pong-history` FROM `user` where `username` != 'admin@121' ORDER BY `pong-history` DESC")
         myresult = mycursor.fetchall()
         my_pong_score = None
         pong_content = Label(pong, relief = SUNKEN, borderwidth = 4)
@@ -1081,8 +1083,13 @@ def admin_panel():
     admin.geometry('700x500')
     admin.minsize(1000, 500)
     admin.maxsize(1000, 500)
-    mycursor.execute("SELECT * FROM `user` WHERE `id` != 0 ORDER BY `id`")
+    mycursor.execute("SELECT * FROM `user` WHERE `username` != 'admin@121'")
     myresult = mycursor.fetchall()
+    t = []
+    for i in range(len(myresult)):
+        a = myresult[i]
+        a = [i+1] + list(a)
+        t.append(a)
     s = ttk.Style()
     s.theme_use('clam')
 
@@ -1115,8 +1122,8 @@ def admin_panel():
     tree.column('# 8', anchor = CENTER, width = 150, stretch = NO)
     tree.heading('# 8', text = 'LAST SEEN')
     
-    for i in range(len(myresult)):
-        tree.insert('', END, values = myresult[i])
+    for i in range(len(t)):
+        tree.insert('', END, values = t[i])
 
     tree.pack()
 
