@@ -386,7 +386,7 @@ def Pong_run(who):
             gameWindow.blit(write, [x, y])
 
     def save_score(score):
-        mycursor.execute("SELECT * FROM `user` WHERE username = %s", (who, ))
+        mycursor.execute(f"SELECT * FROM `user` WHERE username = '{who}'")
         myresult = mycursor.fetchone()
         highscore = myresult[4]
         if score > highscore:
@@ -452,8 +452,8 @@ def Pong_run(who):
 
 
     def re_play(who_wins):
-        current_time = pygame.time.get_ticks()
-        nonlocal score_l, score_r, ball_x, ball_y, bat_l_y, bat_r_y, ball_velocity_x, ball_velocity_y, start, restart
+        # current_time = pygame.time.get_ticks()
+        nonlocal score_l, score_r, ball_x, ball_y, bat_l_y, bat_r_y, ball_velocity_x, ball_velocity_y, start, restart, time
         if who_wins == "l":
             score_l += 1
         elif who_wins == "r":
@@ -470,13 +470,7 @@ def Pong_run(who):
             bat_l_y = Y // 2 - 30
             ball_velocity_y = randint(0, 3)
             ball_velocity_x = choice([-4, 4])
-            # for i in range(3, 0, -1):
-            #     # gameWindow.fill(black)
-            #     count = font.render(str(i), True, grey, black)
-            #     pygame.draw.rect(gameWindow, black, [X/2-10, Y/2-30, 30, 30])
-            #     gameWindow.blit(count, [X/2-10, Y/2-40])
-            #     pygame.display.update()
-            #     sleep(1)
+
 
 
     def A_I(pos):
@@ -563,8 +557,7 @@ def Pong_run(who):
         if restart == True:
             time_score = str(time).replace('.', ':')
             who_won = player_1 if score_l > score_r else player_2
-            text6 = font4.render(
-                f"{who_won} won by {score_l}-{score_r} ", True, grey) if score_l != score_r else f"Match draw by {score_l}-{score_r}"
+            text6 = font4.render(f"{who_won} won by {score_l}-{score_r} ", True, grey)  if score_l != score_r else font4.render(f"Match draw by {score_l}-{score_r}", True, grey)
             text_rect6 = text6.get_rect(center=(X/2, Y/2+30))
             gameWindow.blit(text6, text_rect6)
 
