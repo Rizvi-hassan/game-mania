@@ -37,6 +37,8 @@ passvalue = StringVar()
 new_uservalue = StringVar()
 new_passvalue = StringVar()
 re_passvalue = StringVar() 
+v = BooleanVar()
+v.set(False)
 
 font1 = tkFont.Font(family = "Rockwell Extra Bold", size = 40, weight = "bold", underline = 1)
 font2 = tkFont.Font(family = "Sans Serif", size = 14, weight = "bold")
@@ -886,8 +888,8 @@ def appear_register(widget1, widget2, canvas):
     show_widget(widget2)
     canvas.delete(change_button, change_text, change_message)
     change_text = canvas.create_text(500, 200, text = "REGISTER", font = font3)
-    change_message = canvas.create_text(400, 500, text = "Have an account? ", font = font2)
-    change_button = canvas.create_window(550, 500, window = Button(canvas, text = "Login", font = font2, bg = "grey", command = lambda : appear_login(login_box, register_box, canvas)))
+    change_message = canvas.create_text(400, 550, text = "Have an account? ", font = font2)
+    change_button = canvas.create_window(550, 550, window = Button(canvas, text = "Login", font = font2, bg = "grey", command = lambda : appear_login(login_box, register_box, canvas)))
 
 #To show login box and dissapearregister box
 def appear_login(widget1, widget2, canvas):
@@ -895,16 +897,17 @@ def appear_login(widget1, widget2, canvas):
     hide_widget(widget2)
     show_widget(widget1)
     canvas.delete(change_button, change_text, change_message)
+    enter_btn.config(state = NORMAL)
     change_text = canvas.create_text(500, 200, text = "LOGIN", font = font3)
-    change_message = canvas.create_text(400, 500, text = "New user, register: ", font = font2)
-    change_button = canvas.create_window(550, 500, window = Button(canvas, text = "Reigster", font = font2, bg = "grey", command = lambda : appear_register(login_box, register_box, canvas)))
+    change_message = canvas.create_text(400, 550, text = "New user, register: ", font = font2)
+    change_button = canvas.create_window(550, 550, window = Button(canvas, text = "Reigster", font = font2, bg = "grey", command = lambda : appear_register(login_box, register_box, canvas)))
 
 #Function to feed the information of register to the database 
 def register():
     global current_user
     user, pas, re_pass = new_userentry.get().strip(), new_passentry.get().strip(), re_passentry.get().strip()
     invalid_register.grid_forget()
-    if user and pas and re_pass:
+    if user and pas and re_pass and q_entry.get() and a_entry.get():
         if pas != re_pass:
             invalid_register.grid(row = 2, column = 2)
             return
@@ -914,8 +917,8 @@ def register():
             myresult = mycursor.fetchall()
             result = [i[0] for i in myresult]
             if user not in result:
-                sql = "INSERT INTO user (username, password) VALUES (?, ?)"
-                val = (user, pas)
+                sql = "INSERT INTO user (username, password, sques, ans) VALUES (?, ?, ?, ?)"
+                val = (user, pas, q_entry.get(), a_entry.get())
                 mycursor.execute(sql, val)
                 mydb.commit()
                 current_user = user
@@ -923,37 +926,73 @@ def register():
             else:
                 invalid_register.grid(row = 0, column = 2)
     else:
-        invalid_register.grid(row = 0, column = 2)
-        
+        a = 0
+        a = 4 if not a_entry.get() else a
+        a = 3 if not q_entry.get() else a
+        a = 2 if not re_pass else a
+        a = 1 if not pas else a
+        invalid_register.grid(row = a, column = 2)
+        if a == 4:
+            invalid_register.grid(row = 0, column = 2, sticky = E)
+
     clear_entry(new_userentry, new_passentry, re_passentry)
+
+def change_pass(question, answer, user):
+    def go():
+        if answer_ask.get().strip() == answer:
+            if newpassentry.get() == "":
+                invalid_user.grid(row = 4, column = 0, sticky = E)
+            else:
+                mycursor.execute(f"update user set password = '{newpassentry.get()}' where username = '{user}'")
+                mydb.commit()
+                current_user = user
+                menu()
+        else:
+            invalid_user.grid(row = 3, column = 2)
+
+    enter_btn.config(state = DISABLED)
+    question_ask.config(text = question)
+    question_ask.grid(row = 3, column = 0, sticky = W)
+    answer_ask.grid(row = 3, column = 1, padx = 10)
+    newpassword.grid(row = 4, column = 0, sticky = W)
+    newpassentry.grid(row = 4, column = 1)
+    Button(login_box, text = "Go", font = font2, bg = 'grey', command = go).grid(row = 4, column = 2)
+    
+
+
 
 # Funcion to Check Login related querry
 def login():
     global current_user
     invalid_user.grid_forget()
     user, pas = userentry.get().strip(), passentry.get().strip()
-    if user and pas:
-        sql = "SELECT username, password FROM user"
+    if (user and pas and not v.get()) or (user and v.get()):
+        sql = f"SELECT username, password, sques, ans FROM user where username = '{user}'"
         mycursor.execute(sql)
-        myresult = mycursor.fetchall()
-        userlist = [i[0] for i in myresult]
-        passwordlist = [i[1] for i in myresult]
-        if user in userlist:
-            index = userlist.index(user)
-            if pas == passwordlist[index]:
-                if user == "admin@121":
-                    clear_entry(userentry, passentry)
-                    admin_panel()
+        myresult = mycursor.fetchone()
+        if myresult:
+            userlist = myresult[0]
+            passwordlist = myresult[1]
+            print(myresult)
+            if not v.get():
+                if pas == passwordlist:
+                    if user == "admin@121":
+                        clear_entry(userentry, passentry)
+                        admin_panel()
+                    else:
+                        current_user = user
+                        sql = f"UPDATE user SET `last_seen` = '{datetime.now()}' WHERE username = '{current_user}'"
+                        mycursor.execute(sql)
+                        mydb.commit()
+                        menu()
                 else:
-                    current_user = user
-                    sql = f"UPDATE user SET `last_seen` = '{datetime.now()}' WHERE username = '{current_user}'"
-                    mycursor.execute(sql)
-                    mydb.commit()
-                    menu()
+                    invalid_user.grid(row = 1, column = 2)
             else:
-                invalid_user.grid(row = 1, column = 2)
+                change_pass(myresult[2], myresult[3], myresult[0])
         else:
             invalid_user.grid(row = 0, column = 2)
+    else:
+        invalid_user.grid(row = 1, column = 2)
     clear_entry(userentry, passentry)
 
 # menu box to display different games 
@@ -1122,6 +1161,12 @@ def admin_panel():
 
     admin.mainloop()
 
+def disable_pas():
+    passvalue.set("")
+    passentry.config(state = DISABLED)
+
+def enable_pas():
+    passentry.config(state = NORMAL)
 
 #-------------------------------------------------------INTRO PAGE---------------------------------------------------------------------
 bg1 = Image.open("images/bg1.jpg")
@@ -1131,24 +1176,36 @@ canvas.pack(fill = "both")
 canvas.create_image(0, 0, image = bg1, anchor = "nw")
 canvas.create_text(500, 60, text = "Welcome to Game Mania", font = font1 )
 change_text = canvas.create_text(500, 200, text = "LOGIN", font = font3)
-change_message = canvas.create_text(400, 500, text = "New user, register: ", font = font2)
-change_button = canvas.create_window(550, 500, window = Button(canvas, text = "Reigster", font = font2, bg = "grey", command = lambda : appear_register(login_box, register_box, canvas)))
+change_message = canvas.create_text(400, 550, text = "New user, register: ", font = font2)
+change_button = canvas.create_window(550, 550, window = Button(canvas, text = "Reigster", font = font2, bg = "grey", command = lambda : appear_register(login_box, register_box, canvas)))
 
 #login box
 login_box = Frame(root, width = 500, height = 200, borderwidth = 5, relief = SUNKEN)
 login_box.place(anchor = "c", relx = 0.5, rely = 0.5)
 
-username = Label(login_box, text = "Username", font = "Sans 15 bold", padx = 10, pady = 40)
+
+username = Label(login_box, text = "Username", font = "Sans 15 bold", padx = 10, pady = 20)
 password = Label(login_box, text = "Password", font = "Sans 15 bold", padx = 10 ) 
 userentry = Entry(login_box, textvariable = uservalue, width = 40, fg = "#312e2e", font = "consolas 10")
 passentry = Entry(login_box, textvariable = passvalue, width = 40, fg = "#312e2e", show = "*", font = "consolas 10" )
+rb1 = Radiobutton(login_box, text = "Forgot Password?", variable = v , value = True , command = disable_pas)
+rb2 = Radiobutton(login_box, text = "Normal?", variable = v , value = False , command = enable_pas)
+
+question_ask = Label(login_box, text = "", font = "Sans 12 bold", pady = 10)
+answer_ask = Entry(login_box, width = 40, fg = "#312e2e", show = "-", font = "consolas 10")
+newpassword = Label(login_box, text = "New Password", font = "Sans 15 bold", padx = 10 ) 
+newpassentry = Entry(login_box, width = 40, fg = "#312e2e", show = "-", font = "consolas 10" )
+
 
 username.grid(row = 0, column = 0)
 password.grid(row = 1, column = 0)
 userentry.grid(row = 0, column = 1, padx = 10)
 passentry.grid(row = 1, column = 1, padx = 10)
+rb1.grid(row = 2, column = 1)
+rb2.grid(row = 2, column = 0)
 
-Button(login_box, text = "Enter", font = font2, bg = "grey", command = login ).grid(row = 2 , column = 2, pady = 10, padx = 2)
+enter_btn = Button(login_box, text = "Enter", font = font2, bg = "grey", command = login )
+enter_btn.grid(row = 2 , column = 2, pady = 10, padx = 2)
 # TODO: TO PRINT INVALID MESSAGE WHEN USER INPUT WRONG DATA 
 invalid_user = Label(login_box, text = "*invalid", font = "Sans 10", fg = "red")
 # invalid.grid(row = 0, column = 2)
@@ -1159,13 +1216,17 @@ invalid_user = Label(login_box, text = "*invalid", font = "Sans 10", fg = "red")
 register_box = Frame(root, width = 500, height = 200, borderwidth = 5, relief = SUNKEN)
 # register_box.place(anchor = "c", relx = 0.5, rely = 0.5)
 
-new_username = Label(register_box, text = "Username", font = "Sans 15 bold", padx = 10, pady = 40)
+new_username = Label(register_box, text = "Username", font = "Sans 15 bold", padx = 10, pady = 10)
 new_password = Label(register_box, text = "Password", font = "Sans 15 bold", padx = 10 )
 re_password = Label(register_box, text = "Confirm password", font = "Sans 15 bold", padx = 10)
+s_question = Label(register_box, text = "Security Question", font = "Sans 15 bold", padx = 10, pady = 10)
+s_answer = Label(register_box, text = "Answer", font = "Sans 15 bold", padx = 10)
 
 new_userentry = Entry(register_box, textvariable = new_uservalue, width = 40, fg = "#312e2e", font = "consolas 10")
 new_passentry = Entry(register_box, textvariable = new_passvalue, width = 40, fg = "#312e2e",  show = "*", font = "consolas 10" )
 re_passentry = Entry(register_box, textvariable = re_passvalue, width = 40, fg = "#312e2e", show = "*", font = "consolas 10" )
+q_entry = Entry(register_box, width = 60, fg = "#312e2e", font = "consolas 10" )
+a_entry = Entry(register_box,  width = 40, fg = "#312e2e", show = "*", font = "consolas 10")
 
 new_username.grid(row = 0, column = 0)
 new_password.grid(row = 1, column = 0)
@@ -1173,8 +1234,12 @@ new_userentry.grid(row = 0, column = 1, padx = 10)
 new_passentry.grid(row = 1, column = 1, padx = 10)
 re_password.grid(row = 2, column = 0)
 re_passentry.grid(row = 2, column = 1)
+s_question.grid(row = 3, column = 0)
+q_entry.grid(row = 3, column = 1)
+s_answer.grid(row = 4, column = 0)
+a_entry.grid(row = 4, column = 1)
 
-Button(register_box, text = "Enter", font = font2, bg = "grey", command = lambda : register()).grid(row = 3 , column = 2, pady = 10, padx = 2)
+Button(register_box, text = "Enter", font = font2, bg = "grey", command = lambda : register()).grid(row = 4 , column = 2, pady = 10, padx = 2)
 # TODO: TO PRINT INVALID MESSAGE WHEN USER INPUT WRONG DATA 
 invalid_register = Label(register_box, text = "*invalid", font = "Sans 10", fg = "red")
 # invalid.grid(row = 0, column = 2)
