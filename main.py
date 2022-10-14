@@ -37,6 +37,7 @@ passvalue = StringVar()
 new_uservalue = StringVar()
 new_passvalue = StringVar()
 re_passvalue = StringVar() 
+q_entry = StringVar()
 v = BooleanVar()
 v.set(False)
 
@@ -940,23 +941,30 @@ def register():
 def change_pass(question, answer, user):
     def go():
         if answer_ask.get().strip() == answer:
-            if newpassentry.get() == "":
-                invalid_user.grid(row = 4, column = 0, sticky = E)
-            else:
-                mycursor.execute(f"update user set password = '{newpassentry.get()}' where username = '{user}'")
-                mydb.commit()
-                current_user = user
-                menu()
+            newpassword.grid(row = 4, column = 0, sticky = W)
+            newpassentry.grid(row = 4, column = 1)
+            btn.config(text = "Change", command = change)
+            btn.grid(row = 4, column = 2)
         else:
             invalid_user.grid(row = 3, column = 2)
+
+    def change():
+        if newpassentry.get() != "":
+            mycursor.execute(f"update user set password = '{newpassentry.get()}' where username = '{user}'")
+            mydb.commit()
+            current_user = user
+            menu()
+        else:
+            invalid_user.grid(row = 4, column = 0, sticky = E)
+
 
     enter_btn.config(state = DISABLED)
     question_ask.config(text = question)
     question_ask.grid(row = 3, column = 0, sticky = W)
     answer_ask.grid(row = 3, column = 1, padx = 10)
-    newpassword.grid(row = 4, column = 0, sticky = W)
-    newpassentry.grid(row = 4, column = 1)
-    Button(login_box, text = "Go", font = font2, bg = 'grey', command = go).grid(row = 4, column = 2)
+    btn = Button(login_box, text = "Go", font = font2, bg = 'grey', command = go)
+    btn.grid(row = 3, column = 2)
+
     
 
 
@@ -1225,7 +1233,8 @@ s_answer = Label(register_box, text = "Answer", font = "Sans 15 bold", padx = 10
 new_userentry = Entry(register_box, textvariable = new_uservalue, width = 40, fg = "#312e2e", font = "consolas 10")
 new_passentry = Entry(register_box, textvariable = new_passvalue, width = 40, fg = "#312e2e",  show = "*", font = "consolas 10" )
 re_passentry = Entry(register_box, textvariable = re_passvalue, width = 40, fg = "#312e2e", show = "*", font = "consolas 10" )
-q_entry = Entry(register_box, width = 60, fg = "#312e2e", font = "consolas 10" )
+questions = OptionMenu(register_box, q_entry, *["What is your favourite food", "Who is your favourite actor", "What is your favourite sport", "Who is your mentor"] )
+q_entry.set("What is your favourite food")
 a_entry = Entry(register_box,  width = 40, fg = "#312e2e", show = "*", font = "consolas 10")
 
 new_username.grid(row = 0, column = 0)
@@ -1235,7 +1244,7 @@ new_passentry.grid(row = 1, column = 1, padx = 10)
 re_password.grid(row = 2, column = 0)
 re_passentry.grid(row = 2, column = 1)
 s_question.grid(row = 3, column = 0)
-q_entry.grid(row = 3, column = 1)
+questions.grid(row = 3, column = 1)
 s_answer.grid(row = 4, column = 0)
 a_entry.grid(row = 4, column = 1)
 
